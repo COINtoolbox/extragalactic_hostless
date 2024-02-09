@@ -15,6 +15,7 @@ import pandas as pd
 from tqdm import tqdm
 import pyarrow.parquet as pq
 from scipy import stats
+import sys
 
 
 # Declaring all auxiliary functions...
@@ -149,8 +150,16 @@ def declare_Table():
 # path = "/Volumes/LaCie/postdoc-Bkpis/coin-crp7/data/SIMBAD/"
 path = "/media3/CRP7/hosts/data/SIMBAD/"
 data_path = path + "Nov2019Sep2023_with_candidates/all_data_not_in_mangrove/"
-idx_lim = 1
+data_list = sorted(os.listdir(data_path))
+if '_SUCCESS' in data_list:
+    data_list = data_list[1:]
 labels = ['Science', 'Template', 'Difference']
+
+if len(sys.argv) == 3:
+    pq_idx_start, pq_idx_end = int(sys.argv[1]), int(sys.argv[2])
+else:
+    raise ValueError("Usage: python3 stack_and_sigclip_SIMBAD.py n_start n_end." + \
+                     " The two last values correspond to which parquet files you want to use.")
 
 #
 # *** THIS BLOCK IS WORKING SLOW BUT WELL, I WILL TRY ANOTHER APPROACH *** #
@@ -159,7 +168,7 @@ labels = ['Science', 'Template', 'Difference']
 print('\n\033[1m - Start gathering data in dictionaries...\n\033[0m')
 # dict_mjds, dict_sci_img, dict_temp_img, dict_diff_img = {}, {}, {}, {}
 final_table = declare_Table()
-for pq_file in sorted(os.listdir(data_path))[:idx_lim]:
+for pq_file in data_list[pq_idx_start:pq_idx_end]:
     pq_data = pq.read_table(data_path + pq_file).to_pandas()
     n_exceptions = 0
     for idx in tqdm(range(len(pq_data))):
@@ -314,8 +323,8 @@ for pq_file in sorted(os.listdir(data_path))[:idx_lim]:
 
 
 #### Saving final table
-breakpoint()
+# breakpoint()
 print(f'final_table has {len(final_table.colnames)} columns and {len(final_table)} rows')
-table_name = f'{path}/SIMBAD_stacked_sigclipped_resampled_upto{idx_lim}.fits'
+table_name = f'{path}/SIMBAD_stacked_sigclipped_resampled_pq{pq_idx_start}to{pq_idx_end}.fits'
 final_table.write(table_name, format='fits', overwrite=True)
 print(exception_ids)
