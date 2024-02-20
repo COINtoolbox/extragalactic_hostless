@@ -1,0 +1,16 @@
+{
+  "parquet_files_list": "/path/to/SIMBAD_not_in_MANGROVE_with_candidates_for_testing/*",
+  "save_directory": "/path/to/save/folder/",
+  "fwhm_bins": [1.0, 2.0, 3.0],
+  "image_shape": [63, 63],
+  "is_save_stacked_images": false,
+  "sigma_clipping_kwargs": {
+    "sigma": 3,
+    "maxiters": 10
+  },
+  "hostless_detection_with_clipping": {
+    "crop_radius": 7,
+    "min_number_of_science_pixels_clipped": 5,
+    "min_number_of_template_pixels_clipped": 0
+  }
+}
