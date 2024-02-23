@@ -112,9 +112,9 @@ class HostLessExtragalactic:
         """
         data_dict = {
             "objectID": object_id,
-            "b:cutoutScience_stampData_last": science_stacked.tobytes(),
-            "b:cutoutTemplate_stampData_last": template_stacked.tobytes(),
-            "b:cutoutDifference_stampData_last": difference_stacked.tobytes(),
+            "b:cutoutScience_stampData_stacked": science_stacked.tobytes(),
+            "b:cutoutTemplate_stampData_stacked": template_stacked.tobytes(),
+            "b:cutoutDifference_stampData_stacked": difference_stacked.tobytes(),
             "number_of_stamps_in_stacking": number_of_stamps_in_stacking,
             "is_hostless_candidate_clipping": is_hostless_candidate,
             "distance_science": distance_science,
@@ -142,38 +142,26 @@ class HostLessExtragalactic:
         """
         for each_file in self._parquet_files_list:
             parquet_file_name = os.path.basename(each_file).replace(
-                "parquet", "")
+                ".parquet", "")
             self.process_parquet_file(each_file)
             last_stamp_df = pd.DataFrame(self._last_stamp_data_list)
+            last_stamp_df.rename(columns={
+                "b:cutoutScience_stampData": "b:cutoutScience_stampData_last",
+                "b:cutoutTemplate_stampData": "b:cutoutTemplate_stampData_last",
+                "b:cutoutDifference_stampData": "b:cutoutDifference_stampData_last",
+
+            })
             stacked_results_df = pd.DataFrame(self._stacked_data_list)
             last_stamp_df_save_fname = os.path.join(
                 self.configs["save_directory"],
-                parquet_file_name + "last_stamp_df.csv")
+                parquet_file_name + "_last_stamp_df.parquet")
             stacked_results_df_save_fname = os.path.join(
                 self.configs["save_directory"],
-                parquet_file_name + "stacked_results_df.csv")
-            last_stamp_df.to_csv(last_stamp_df_save_fname)
-            stacked_results_df.to_csv(stacked_results_df_save_fname)
+                parquet_file_name + "_stacked_results_df.parquet")
+            last_stamp_df.to_parquet(last_stamp_df_save_fname)
+            stacked_results_df.to_parquet(stacked_results_df_save_fname)
             self._last_stamp_data_list = []
             self._stacked_data_list = []
-
-    def _create_stacked_df(
-            self, object_id: str, science_stacked: np.ndarray,
-            template_stacked: np.ndarray, difference_stacked: np.ndarray,
-            number_of_stamps_in_stacking: int, is_hostless_candidate: bool,
-            distance_science: float, distance_template: float):
-        data_dict = {
-            "objectID": object_id,
-            "b:cutoutScience_stampData_last": science_stacked.tobytes(),
-            "b:cutoutTemplate_stampData_last": template_stacked.tobytes(),
-            "b:cutoutDifference_stampData_last": difference_stacked.tobytes(),
-            "number_of_stamps_in_stacking": number_of_stamps_in_stacking,
-            "is_hostless_candidate_clipping": is_hostless_candidate,
-            "distance_science": distance_science,
-            "distance_template": distance_template
-
-        }
-        self._stacked_data_list.append(pd.Series(data=data_dict))
 
     def _run_median_stacking(self, science_stamp, template_stamp,
                              difference_stamp) -> Tuple[

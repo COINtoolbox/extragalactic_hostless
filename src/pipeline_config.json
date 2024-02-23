@@ -1,5 +1,5 @@
 {
-  "parquet_files_list": "/path/to/SIMBAD_not_in_MANGROVE_with_candidates_for_testing/*",
+  "parquet_files_list": "/path/to/SIMBAD_not_in_MANGROVE_with_candidates_for_testing/*parquet",
   "save_directory": "/path/to/save/folder/",
   "fwhm_bins": [1.0, 2.0, 3.0],
   "image_shape": [63, 63],
