@@ -93,7 +93,7 @@ def maybe_filter_stamps_with_fwhm(
     return data_df
 
 
-def _read_bytes_image(bytes_str: bytes) -> np.ndarray:
+def read_bytes_image(bytes_str: bytes) -> np.ndarray:
     """
     Reads bytes image stamp
 
@@ -119,15 +119,15 @@ def read_stamp_bytes_data(data: pd.DataFrame) -> Tuple[
         candidate data
     """
     science_stamp = (data["b:cutoutScience_stampData"].apply(
-        _read_bytes_image))
+        read_bytes_image))
     template_stamp = (data["b:cutoutTemplate_stampData"].apply(
-        _read_bytes_image))
+        read_bytes_image))
     difference_stamp = (data["b:cutoutDifference_stampData"].apply(
-        _read_bytes_image))
+        read_bytes_image))
     return science_stamp, template_stamp, difference_stamp
 
 
-def _resample_with_gaussian_kde(stamp_data, output_shape: List) -> Tuple[
+def resample_with_gaussian_kde(stamp_data, output_shape: List) -> Tuple[
         None, np.ndarray]:
     """
     Replace none and nan values by resampling data with gaussian kernels
@@ -171,7 +171,7 @@ def apply_median_stacking(data: pd.DataFrame, output_shape):
     output_shape
         expected output shape of stamp
     """
-    data = data.apply(_resample_with_gaussian_kde, args=(output_shape,))
+    data = data.apply(resample_with_gaussian_kde, args=(output_shape,))
     data = data.dropna()
     if data.size == 0:
         return None
@@ -268,9 +268,9 @@ def run_hostless_detection_with_clipped_data(
     image_shape
         image shape
     """
-    science_stamp = _resample_with_gaussian_kde(
+    science_stamp = resample_with_gaussian_kde(
         science_stamp, image_shape)
-    template_stamp = _resample_with_gaussian_kde(
+    template_stamp = resample_with_gaussian_kde(
         template_stamp, image_shape)
     science_stamp_cropped = crop_center_patch(
         science_stamp, detection_configs["crop_radius"])

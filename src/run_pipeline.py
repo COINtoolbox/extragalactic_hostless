@@ -12,7 +12,7 @@ from pipeline_utils import (
     load_json, read_parquet_to_df, maybe_filter_stamps_with_fwhm,
     read_stamp_bytes_data, apply_median_stacking, maybe_save_stacked_images,
     apply_sigma_clipping, run_hostless_detection_with_clipped_data,
-    run_distance_calculation)
+    run_distance_calculation, resample_with_gaussian_kde, read_bytes_image)
 
 
 class HostLessExtragalactic:
@@ -71,7 +71,8 @@ class HostLessExtragalactic:
         maybe_save_stacked_images(
             data_to_plot, object_id, self._subplot_labels, self.configs,
             "sigma_clipped")
-        self._last_stamp_data_list.append(data_df.iloc[-1])
+        self._last_stamp_data_list.append(self._get_resampled_last_df(
+            data_df.iloc[-1]))
 
         distance_science, distance_template = run_distance_calculation(
             science_stamp_clipped, template_stamp_clipped)
@@ -79,6 +80,31 @@ class HostLessExtragalactic:
             object_id, science_stamp, template_stamp, difference_stamp,
             number_of_stamps_in_stacking, is_hostless_candidate,
             distance_science, distance_template)
+
+    def _get_resampled_last_df(self, last_data_df: pd.DataFrame):
+        """
+        Resamples last image stamp data
+
+        Parameters
+        ----------
+        last_data_df
+            data of last stamp
+        """
+        last_data_df_copy = last_data_df.copy(deep=True)
+        last_science_stamp = read_bytes_image(
+            last_data_df["b:cutoutScience_stampData"])
+        last_data_df_copy["b:cutoutScience_stampData"] = (
+            resample_with_gaussian_kde(last_science_stamp, self._image_shape))
+        last_template_stamp = read_bytes_image(
+            last_data_df["b:cutoutTemplate_stampData"])
+        last_data_df_copy["b:cutoutTemplate_stampData"] = (
+            resample_with_gaussian_kde(last_template_stamp, self._image_shape))
+        last_difference_stamp = read_bytes_image(
+            last_data_df["b:cutoutDifference_stampData"])
+        last_data_df_copy["b:cutoutDifference_stampData"] = (
+            resample_with_gaussian_kde(
+                last_difference_stamp, self._image_shape))
+        return last_data_df
 
     def _create_stacked_df(
             self, object_id: str, science_stacked: np.ndarray,
