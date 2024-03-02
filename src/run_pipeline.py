@@ -93,18 +93,26 @@ class HostLessExtragalactic:
         last_data_df_copy = last_data_df.copy(deep=True)
         last_science_stamp = read_bytes_image(
             last_data_df["b:cutoutScience_stampData"])
-        last_data_df_copy["b:cutoutScience_stampData"] = (
-            resample_with_gaussian_kde(last_science_stamp, self._image_shape))
+        last_science_stamp = resample_with_gaussian_kde(
+            last_science_stamp, self._image_shape)
+        if last_science_stamp is not None:
+            last_data_df_copy["b:cutoutScience_stampData"] = (
+                last_science_stamp.tobytes())
         last_template_stamp = read_bytes_image(
             last_data_df["b:cutoutTemplate_stampData"])
-        last_data_df_copy["b:cutoutTemplate_stampData"] = (
-            resample_with_gaussian_kde(last_template_stamp, self._image_shape))
+        last_template_stamp = resample_with_gaussian_kde(
+            last_template_stamp, self._image_shape)
+        if last_template_stamp is not None:
+            last_data_df_copy["b:cutoutTemplate_stampData"] = (
+                last_template_stamp.tobytes())
         last_difference_stamp = read_bytes_image(
             last_data_df["b:cutoutDifference_stampData"])
-        last_data_df_copy["b:cutoutDifference_stampData"] = (
-            resample_with_gaussian_kde(
-                last_difference_stamp, self._image_shape))
-        return last_data_df
+        last_difference_stamp = resample_with_gaussian_kde(
+                last_difference_stamp, self._image_shape)
+        if last_difference_stamp is not None:
+            last_data_df_copy["b:cutoutDifference_stampData"] = (
+                last_difference_stamp.tobytes())
+        return last_data_df_copy
 
     def _create_stacked_df(
             self, object_id: str, science_stacked: np.ndarray,
@@ -171,12 +179,6 @@ class HostLessExtragalactic:
                 ".parquet", "")
             self.process_parquet_file(each_file)
             last_stamp_df = pd.DataFrame(self._last_stamp_data_list)
-            last_stamp_df.rename(columns={
-                "b:cutoutScience_stampData": "b:cutoutScience_stampData_last",
-                "b:cutoutTemplate_stampData": "b:cutoutTemplate_stampData_last",
-                "b:cutoutDifference_stampData": "b:cutoutDifference_stampData_last",
-
-            })
             stacked_results_df = pd.DataFrame(self._stacked_data_list)
             last_stamp_df_save_fname = os.path.join(
                 self.configs["save_directory"],
