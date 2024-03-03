@@ -78,6 +78,7 @@ class HostLessExtragalactic:
             science_stamp_clipped, template_stamp_clipped)
         self._create_stacked_df(
             object_id, science_stamp, template_stamp, difference_stamp,
+            science_stamp_clipped, template_stamp_clipped,
             number_of_stamps_in_stacking, is_hostless_candidate,
             distance_science, distance_template)
 
@@ -117,6 +118,7 @@ class HostLessExtragalactic:
     def _create_stacked_df(
             self, object_id: str, science_stacked: np.ndarray,
             template_stacked: np.ndarray, difference_stacked: np.ndarray,
+            science_clipped: np.ndarray, template_clipped: np.ndarray,
             number_of_stamps_in_stacking: int, is_hostless_candidate: bool,
             distance_science: float, distance_template: float):
         """
@@ -149,6 +151,8 @@ class HostLessExtragalactic:
             "b:cutoutScience_stampData_stacked": science_stacked.tobytes(),
             "b:cutoutTemplate_stampData_stacked": template_stacked.tobytes(),
             "b:cutoutDifference_stampData_stacked": difference_stacked.tobytes(),
+            "science_clipped": science_clipped.tobytes(),
+            "template_clipped": template_clipped.tobytes(),
             "number_of_stamps_in_stacking": number_of_stamps_in_stacking,
             "is_hostless_candidate_clipping": is_hostless_candidate,
             "distance_science": distance_science,
