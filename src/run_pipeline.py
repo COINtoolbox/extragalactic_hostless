@@ -71,9 +71,16 @@ class HostLessExtragalactic:
         maybe_save_stacked_images(
             data_to_plot, object_id, self._subplot_labels, self.configs,
             "sigma_clipped")
-        self._last_stamp_data_list.append(self._get_resampled_last_df(
-            data_df.iloc[-1]))
 
+        last_df_resampled = self._get_resampled_last_df(
+            data_df.iloc[-1])
+        data_df["b:cutoutScience_stampData"] = last_df_resampled[
+            "b:cutoutScience_stampData"]
+        data_df["b:cutoutTemplate_stampData"] = last_df_resampled[
+            "b:cutoutTemplate_stampData"]
+        data_df["b:cutoutDifference_stampData"] = last_df_resampled[
+            "b:cutoutDifference_stampData"]
+        self._last_stamp_data_list.append(self._reformat_last_df(data_df))
         distance_science, distance_template = run_distance_calculation(
             science_stamp_clipped, template_stamp_clipped)
         self._create_stacked_df(
@@ -147,7 +154,7 @@ class HostLessExtragalactic:
             closest masked source in template image
         """
         data_dict = {
-            "objectID": object_id,
+            "objectId": object_id,
             "b:cutoutScience_stampData_stacked": science_stacked.tobytes(),
             "b:cutoutTemplate_stampData_stacked": template_stacked.tobytes(),
             "b:cutoutDifference_stampData_stacked": difference_stacked.tobytes(),
@@ -184,16 +191,28 @@ class HostLessExtragalactic:
             self.process_parquet_file(each_file)
             last_stamp_df = pd.DataFrame(self._last_stamp_data_list)
             stacked_results_df = pd.DataFrame(self._stacked_data_list)
-            last_stamp_df_save_fname = os.path.join(
+            combined_results_save_fname = os.path.join(
                 self.configs["save_directory"],
-                parquet_file_name + "_last_stamp_df.parquet")
-            stacked_results_df_save_fname = os.path.join(
-                self.configs["save_directory"],
-                parquet_file_name + "_stacked_results_df.parquet")
-            last_stamp_df.to_parquet(last_stamp_df_save_fname)
-            stacked_results_df.to_parquet(stacked_results_df_save_fname)
+                parquet_file_name + "_final_results_df.parquet")
+            combined_results = pd.merge(
+                last_stamp_df, stacked_results_df, on="objectId")
+            combined_results.to_parquet(combined_results_save_fname)
             self._last_stamp_data_list = []
             self._stacked_data_list = []
+
+    @staticmethod
+    def _reformat_last_df(candidate_df: pd.DataFrame):
+        columns_to_ignore = [
+            "objectId", "b:cutoutScience_stampData",
+             "b:cutoutTemplate_stampData", "b:cutoutDifference_stampData"]
+        new_df = pd.DataFrame()
+        for each_column in candidate_df.columns:
+            if each_column not in columns_to_ignore:
+                new_df[each_column] = candidate_df.groupby(
+                    'objectId').agg({each_column: lambda x: list(x)})
+        for each_column in columns_to_ignore:
+            new_df[each_column] = candidate_df[each_column].values[0]
+        return new_df.squeeze()
 
     def _run_median_stacking(self, science_stamp, template_stamp,
                              difference_stamp) -> Tuple[
