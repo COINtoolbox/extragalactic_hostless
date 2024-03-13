@@ -5,6 +5,7 @@ import glob
 import os
 from typing import Dict, Tuple
 
+from multiprocessing import Pool
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -46,6 +47,8 @@ class HostLessExtragalactic:
         object_id = data[1]["objectId"]
         # temporary hack..
         data = data[1].drop(["tracklet"])
+        if data["b:cutoutTemplate_stampData"].size == 1:
+            return None
         data_df = maybe_filter_stamps_with_fwhm(
             data, self.configs["fwhm_bins"])
         science_stamp, template_stamp, difference_stamp = (
@@ -180,24 +183,24 @@ class HostLessExtragalactic:
         for each_candidate in tqdm(parquet_data.iterrows()):
             self.process_candidate(each_candidate)
 
-    def run(self):
+    def run(self, index):
         """
         Main run method
         """
-        for each_file in self._parquet_files_list:
-            parquet_file_name = os.path.basename(each_file).replace(
-                ".parquet", "")
-            self.process_parquet_file(each_file)
-            last_stamp_df = pd.DataFrame(self._last_stamp_data_list)
-            stacked_results_df = pd.DataFrame(self._stacked_data_list)
-            combined_results_save_fname = os.path.join(
-                self.configs["save_directory"],
-                parquet_file_name + "_final_results_df.parquet")
-            combined_results = pd.merge(
-                last_stamp_df, stacked_results_df, on="objectId")
-            combined_results.to_parquet(combined_results_save_fname)
-            self._last_stamp_data_list = []
-            self._stacked_data_list = []
+        each_file = self._parquet_files_list[index]
+        parquet_file_name = os.path.basename(each_file).replace(
+            ".parquet", "")
+        self.process_parquet_file(each_file)
+        last_stamp_df = pd.DataFrame(self._last_stamp_data_list)
+        stacked_results_df = pd.DataFrame(self._stacked_data_list)
+        combined_results_save_fname = os.path.join(
+            self.configs["save_directory"],
+            parquet_file_name + "_final_results_df.parquet")
+        combined_results = pd.merge(
+            last_stamp_df, stacked_results_df, on="objectId")
+        combined_results.to_parquet(combined_results_save_fname)
+        self._last_stamp_data_list = []
+        self._stacked_data_list = []
 
     @staticmethod
     def _reformat_last_df(candidate_df: pd.DataFrame):
@@ -256,8 +259,20 @@ class HostLessExtragalactic:
         return science_stamp_clipped, template_stamp_clipped
 
 
+def run_in_parallel(index):
+    CONFIG_PATH = "pipeline_config_local.json"
+    CONFIG_DATA = load_json(CONFIG_PATH)
+    run_class = HostLessExtragalactic(CONFIG_DATA)
+    run_class.run(index)
+
+
 if __name__ == '__main__':
     CONFIG_PATH = "pipeline_config.json"
-    configs_data = load_json(CONFIG_PATH)
-    run_class = HostLessExtragalactic(configs_data)
-    run_class.run()
+    CONFIG_DATA = load_json(CONFIG_PATH)
+
+    parquet_files_list = sorted(glob.glob(
+        CONFIG_DATA["parquet_files_list"]))
+    pool = Pool()
+    pool.map(run_in_parallel, range(len(parquet_files_list)))
+
+
