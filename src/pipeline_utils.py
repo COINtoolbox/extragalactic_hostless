@@ -248,9 +248,27 @@ def crop_center_patch(input_image: np.ndarray, patch_radius: int = 7) -> np.ndar
            center_patch_y:center_patch_y + patch_radius * 2]
 
 
+def _check_hostless_conditions(
+        science_clipped: np.ndarray, template_clipped: np.ndarray,
+        detection_config: Dict):
+    num_science_pixels_masked = np.ma.count_masked(science_clipped)
+    num_template_pixels_masked = np.ma.count_masked(template_clipped)
+    if (num_science_pixels_masked > detection_config[
+        "max_number_of_pixels_clipped"] and
+            num_template_pixels_masked < detection_config[
+                "min_number_of_pixels_clipped"]):
+        return True
+    if (num_template_pixels_masked > detection_config[
+        "max_number_of_pixels_clipped"] and
+            num_science_pixels_masked < detection_config[
+                "min_number_of_pixels_clipped"]):
+        return True
+    return False
+
+
 def run_hostless_detection_with_clipped_data(
         science_stamp: np.ndarray, template_stamp: np.ndarray,
-        detection_configs: Dict, image_shape: List) -> bool:
+        configs: Dict, image_shape: List) -> bool:
     """
     Detects potential hostless candidates with sigma clipped stamp images by
      cropping an image patch from the center of the image.
@@ -268,23 +286,27 @@ def run_hostless_detection_with_clipped_data(
     image_shape
         image shape
     """
-    science_stamp = resample_with_gaussian_kde(
-        science_stamp, image_shape)
-    template_stamp = resample_with_gaussian_kde(
-        template_stamp, image_shape)
-    science_stamp_cropped = crop_center_patch(
-        science_stamp, detection_configs["crop_radius"])
-    template_stamp_cropped = crop_center_patch(
-        template_stamp, detection_configs["crop_radius"])
-    num_science_pixels_masked = np.ma.count_masked(science_stamp_cropped)
-    num_template_pixels_masked = np.ma.count_masked(template_stamp_cropped)
-    if (num_science_pixels_masked > detection_configs[
-        "min_number_of_science_pixels_clipped"] and
-            num_template_pixels_masked == detection_configs[
-                "min_number_of_template_pixels_clipped"]):
-        return True
-    return False
+    sigma_clipping_config = configs["sigma_clipping_kwargs"]
 
+    science_clipped = apply_sigma_clipping(science_stamp, sigma_clipping_config)
+    template_clipped = apply_sigma_clipping(
+        template_stamp, sigma_clipping_config)
+    detection_config = configs["hostless_detection_with_clipping"]
+    is_hostless_candidate = _check_hostless_conditions(
+        science_clipped, template_clipped, detection_config)
+    if is_hostless_candidate:
+        return is_hostless_candidate
+    science_stamp = crop_center_patch(
+        science_stamp, detection_config["crop_radius"])
+    template_stamp = crop_center_patch(
+        template_stamp, detection_config["crop_radius"])
+    science_clipped = apply_sigma_clipping(
+        science_stamp, sigma_clipping_config)
+    template_clipped = apply_sigma_clipping(
+        template_stamp, sigma_clipping_config)
+    is_hostless_candidate = _check_hostless_conditions(
+        science_clipped, template_clipped, detection_config)
+    return is_hostless_candidate
 
 def calculate_distance(table_seg: np.ndarray, radius: float = -1):
     #TODO(utthishtastro): Refactor

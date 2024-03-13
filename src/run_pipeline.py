@@ -63,11 +63,10 @@ class HostLessExtragalactic:
         science_stamp_clipped, template_stamp_clipped = (
             self._run_sigma_clipping(science_stamp, template_stamp))
         data_to_plot = [science_stamp_clipped, template_stamp_clipped]
-
         is_hostless_candidate = run_hostless_detection_with_clipped_data(
             science_stamp_clipped, template_stamp_clipped,
-            self.configs["hostless_detection_with_clipping"],
-            self._image_shape)
+            self.configs, self._image_shape)
+
         maybe_save_stacked_images(
             data_to_plot, object_id, self._subplot_labels, self.configs,
             "sigma_clipped")

@@ -10,7 +10,7 @@
   },
   "hostless_detection_with_clipping": {
     "crop_radius": 7,
-    "min_number_of_science_pixels_clipped": 5,
-    "min_number_of_template_pixels_clipped": 0
+    "max_number_of_pixels_clipped": 5,
+    "min_number_of_pixels_clipped": 3
   }
 }
