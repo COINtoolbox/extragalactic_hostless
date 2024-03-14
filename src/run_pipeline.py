@@ -46,11 +46,11 @@ class HostLessExtragalactic:
         """
         object_id = data[1]["objectId"]
         # temporary hack..
-        data = data[1].drop(["tracklet"])
-        if data["b:cutoutTemplate_stampData"].size == 1:
+        data_original = data[1].drop(["tracklet"])
+        if data_original["b:cutoutTemplate_stampData"].size == 1:
             return None
         data_df = maybe_filter_stamps_with_fwhm(
-            data, self.configs["fwhm_bins"])
+            data_original, self.configs["fwhm_bins"])
         science_stamp, template_stamp, difference_stamp = (
                 read_stamp_bytes_data(data_df))
         number_of_stamps_in_stacking = len(science_stamp)
@@ -82,7 +82,7 @@ class HostLessExtragalactic:
             "b:cutoutTemplate_stampData"]
         data_df["b:cutoutDifference_stampData"] = last_df_resampled[
             "b:cutoutDifference_stampData"]
-        self._last_stamp_data_list.append(self._reformat_last_df(data_df))
+        self._last_stamp_data_list.append(self._reformat_last_df(data_original))
         distance_science, distance_template = run_distance_calculation(
             science_stamp_clipped, template_stamp_clipped)
         self._create_stacked_df(
@@ -203,11 +203,14 @@ class HostLessExtragalactic:
         self._stacked_data_list = []
 
     @staticmethod
-    def _reformat_last_df(candidate_df: pd.DataFrame):
+    def _reformat_last_df(candidate_df_original: pd.DataFrame):
         columns_to_ignore = [
             "objectId", "b:cutoutScience_stampData",
              "b:cutoutTemplate_stampData", "b:cutoutDifference_stampData"]
         new_df = pd.DataFrame()
+        candidate_df = pd.DataFrame.from_dict(dict(zip(
+            candidate_df_original.index, candidate_df_original.values)))
+
         for each_column in candidate_df.columns:
             if each_column not in columns_to_ignore:
                 new_df[each_column] = candidate_df.groupby(
