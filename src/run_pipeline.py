@@ -260,7 +260,7 @@ class HostLessExtragalactic:
 
 
 def run_in_parallel(index):
-    CONFIG_PATH = "pipeline_config_local.json"
+    CONFIG_PATH = "pipeline_config.json"
     CONFIG_DATA = load_json(CONFIG_PATH)
     run_class = HostLessExtragalactic(CONFIG_DATA)
     run_class.run(index)
