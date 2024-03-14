@@ -272,7 +272,7 @@ if __name__ == '__main__':
 
     parquet_files_list = sorted(glob.glob(
         CONFIG_DATA["parquet_files_list"]))
-    pool = Pool()
+    pool = Pool(processes=CONFIG_DATA["number_of_processes"])
     pool.map(run_in_parallel, range(len(parquet_files_list)))
 
 
