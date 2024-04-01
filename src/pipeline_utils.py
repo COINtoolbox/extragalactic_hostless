@@ -16,6 +16,8 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
+import powerspectrum as ps
+
 
 def load_json(file_path: str) -> Dict:
     """
@@ -402,3 +404,60 @@ def run_distance_calculation(
         distance_science = -1
         distance_template = -1
     return distance_science, distance_template
+
+
+def create_noise_filled_mask(image_data: np.ndarray,
+                             mask_data: np.ndarray, image_size: List):
+    """
+    Creates input image data with noise filled mask
+    Parameters
+    ----------
+    image_data
+        input stacked image data
+    mask_data
+        corresponding input masked data
+    image_size
+        output image size
+    """
+    mask = mask_data > 0
+    for_filling = np.random.normal(
+        np.median(image_data[~mask]), np.std(image_data[~mask]),
+        image_size)
+    for_filling = np.where(mask, for_filling, 0)
+    to_fill = np.where(mask, 0, image_data)
+    return to_fill + for_filling
+
+
+def run_powerspectrum_analysis(
+        science_image: np.ndarray, template_image: np.ndarray,
+        science_mask: np.ndarray, template_mask: np.ndarray,
+        image_size: List, number_of_iterations: int = 200):
+    """
+
+    Parameters
+    ----------
+    science_image
+    template_image
+    science_mask
+    template_mask
+    image_size
+    number_of_iterations
+
+    Returns
+    -------
+
+    """
+    science_data = create_noise_filled_mask(
+        science_image, science_mask, image_size)
+    template_data = create_noise_filled_mask(
+        template_image, template_mask, image_size)
+    _, anderson_results_dict = ps.detect_host_with_powerspectrum(
+        science_data, template_data, N_iter=number_of_iterations,
+        metric="anderson-darling")
+    _, kstest_results_dict = ps.detect_host_with_powerspectrum(
+        science_data, template_data, N_iter=number_of_iterations,
+        metric="kstest")
+    out_results = {**anderson_results_dict, **kstest_results_dict}
+    return out_results
+
+

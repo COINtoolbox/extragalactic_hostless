@@ -13,7 +13,8 @@ from pipeline_utils import (
     load_json, read_parquet_to_df, maybe_filter_stamps_with_fwhm,
     read_stamp_bytes_data, apply_median_stacking, maybe_save_stacked_images,
     apply_sigma_clipping, run_hostless_detection_with_clipped_data,
-    run_distance_calculation, resample_with_gaussian_kde, read_bytes_image)
+    run_distance_calculation, resample_with_gaussian_kde, read_bytes_image,
+    run_powerspectrum_analysis)
 
 
 class HostLessExtragalactic:
@@ -85,11 +86,14 @@ class HostLessExtragalactic:
         self._last_stamp_data_list.append(self._reformat_last_df(data_original))
         distance_science, distance_template = run_distance_calculation(
             science_stamp_clipped, template_stamp_clipped)
+        power_spectrum_results = run_powerspectrum_analysis(
+            science_stamp, template_stamp, science_stamp_clipped.mask.astype(int),
+            template_stamp_clipped.mask.astype(int), self._image_shape)
         self._create_stacked_df(
             object_id, science_stamp, template_stamp, difference_stamp,
             science_stamp_clipped, template_stamp_clipped,
             number_of_stamps_in_stacking, is_hostless_candidate,
-            distance_science, distance_template)
+            distance_science, distance_template, power_spectrum_results)
 
     def _get_resampled_last_df(self, last_data_df: pd.DataFrame):
         """
@@ -129,7 +133,8 @@ class HostLessExtragalactic:
             template_stacked: np.ndarray, difference_stacked: np.ndarray,
             science_clipped: np.ndarray, template_clipped: np.ndarray,
             number_of_stamps_in_stacking: int, is_hostless_candidate: bool,
-            distance_science: float, distance_template: float):
+            distance_science: float, distance_template: float,
+            power_spectrum_results: Dict):
         """
         Creates stacked science, template and difference stamp with median FWHM
         and corresponding hostless analysis results
@@ -154,6 +159,8 @@ class HostLessExtragalactic:
         distance_template
             euclidian distance between the transient and the
             closest masked source in template image
+        power_spectrum_results
+            dict with power spectrum results
         """
         data_dict = {
             "objectId": object_id,
@@ -166,8 +173,8 @@ class HostLessExtragalactic:
             "is_hostless_candidate_clipping": is_hostless_candidate,
             "distance_science": distance_science,
             "distance_template": distance_template
-
         }
+        data_dict.update(power_spectrum_results)
         self._stacked_data_list.append(pd.Series(data=data_dict))
 
     def process_parquet_file(self, file_path: str):
@@ -206,7 +213,7 @@ class HostLessExtragalactic:
     def _reformat_last_df(candidate_df_original: pd.DataFrame):
         columns_to_ignore = [
             "objectId", "b:cutoutScience_stampData",
-             "b:cutoutTemplate_stampData", "b:cutoutDifference_stampData"]
+            "b:cutoutTemplate_stampData", "b:cutoutDifference_stampData"]
         new_df = pd.DataFrame()
         candidate_df = pd.DataFrame.from_dict(dict(zip(
             candidate_df_original.index, candidate_df_original.values)))
