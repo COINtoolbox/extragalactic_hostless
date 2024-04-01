@@ -431,17 +431,23 @@ def create_noise_filled_mask(image_data: np.ndarray,
 def run_powerspectrum_analysis(
         science_image: np.ndarray, template_image: np.ndarray,
         science_mask: np.ndarray, template_mask: np.ndarray,
-        image_size: List, number_of_iterations: int = 200):
+        image_size: List, number_of_iterations: int = 200) -> Dict:
     """
 
     Parameters
     ----------
     science_image
+        science stamp
     template_image
+        template stamp
     science_mask
+        sigma clipped science image
     template_mask
+        sigma clipped template image
     image_size
+        output image size
     number_of_iterations
+        number of iterations for powerspectrum analysis shuffling
 
     Returns
     -------
