@@ -3,7 +3,7 @@ import astropy.table as at
 from scipy.stats import binned_statistic, wasserstein_distance, anderson_ksamp, kstest
 
 
-def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, N_iter=1000, cutout_sizes=[7, 15, 29],
+def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, number_of_iterations=1000, cutout_sizes=[7, 15, 29],
                                    metric='anderson-darling'):
     """
     Function to detect host with power spectrum analysis.
@@ -11,7 +11,7 @@ def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, N_iter=1000, 
     Parameters:
     - sci_image: Science image (default: None)
     - tpl_image: Template image (default: None)
-    - N_iter: Number of iterations for shuffling (default: 1000)
+    - number_of_iterations: Number of iterations for shuffling (default: 1000)
     - cutout_sizes: List of cutout sizes for analysis (default: [7, 15, 29])
     - metric: Metric for comparison ('anderson-darling' or 'kstest') (default: 'anderson-darling')
 
@@ -63,7 +63,7 @@ def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, N_iter=1000, 
         shuffled_Abins_dict = {}  # Dictionary to store shuffled Abins
 
         # Iterate through shuffling process
-        for n in range(N_iter):
+        for n in range(number_of_iterations):
             copy = np.copy(image)
             copy = copy.reshape(full_len * full_len)
             np.random.shuffle(copy)
@@ -76,7 +76,7 @@ def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, N_iter=1000, 
                 N_bins = len(np.arange(0.5, size // 2 + 1, 1.)) - 1
 
                 if n == 0:
-                    shuffled_Abins_dict[size] = np.zeros((N_iter, N_bins))
+                    shuffled_Abins_dict[size] = np.zeros((number_of_iterations, N_bins))
 
                     image_resized = image[start: stop, start: stop]
                     Abins = get_powerspectrum(image_resized, size)
@@ -92,13 +92,13 @@ def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, N_iter=1000, 
             WD_dist_real_to_shuffled = []
             WD_dist_shuffled_to_shuffled = []
 
-            for n in range(N_iter):
+            for n in range(number_of_iterations):
 
                 iter1 = shuffled_Abins_dict[size][n]
                 wd = wasserstein_distance(iter1, real_Abins_dict[size])
                 WD_dist_real_to_shuffled.append(wd)
 
-                for m in range(N_iter):
+                for m in range(number_of_iterations):
                     if m >= n:
                         continue
                     iter2 = shuffled_Abins_dict[size][m]

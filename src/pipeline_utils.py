@@ -458,10 +458,10 @@ def run_powerspectrum_analysis(
     template_data = create_noise_filled_mask(
         template_image, template_mask, image_size)
     _, anderson_results_dict = ps.detect_host_with_powerspectrum(
-        science_data, template_data, N_iter=number_of_iterations,
+        science_data, template_data, number_of_iterations=number_of_iterations,
         metric="anderson-darling")
     _, kstest_results_dict = ps.detect_host_with_powerspectrum(
-        science_data, template_data, N_iter=number_of_iterations,
+        science_data, template_data, number_of_iterations=number_of_iterations,
         metric="kstest")
     out_results = {**anderson_results_dict, **kstest_results_dict}
     return out_results
