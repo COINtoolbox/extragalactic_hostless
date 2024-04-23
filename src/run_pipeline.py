@@ -86,9 +86,11 @@ class HostLessExtragalactic:
         self._last_stamp_data_list.append(self._reformat_last_df(data_original))
         distance_science, distance_template = run_distance_calculation(
             science_stamp_clipped, template_stamp_clipped)
-        power_spectrum_results = run_powerspectrum_analysis(
-            science_stamp, template_stamp, science_stamp_clipped.mask.astype(int),
-            template_stamp_clipped.mask.astype(int), self._image_shape)
+        power_spectrum_results = {}
+        if is_hostless_candidate:
+            power_spectrum_results = run_powerspectrum_analysis(
+                science_stamp, template_stamp, science_stamp_clipped.mask.astype(int),
+                template_stamp_clipped.mask.astype(int), self._image_shape)
         self._create_stacked_df(
             object_id, science_stamp, template_stamp, difference_stamp,
             science_stamp_clipped, template_stamp_clipped,
@@ -284,5 +286,3 @@ if __name__ == '__main__':
         CONFIG_DATA["parquet_files_list"]))
     pool = Pool(processes=CONFIG_DATA["number_of_processes"])
     pool.map(run_in_parallel, range(len(parquet_files_list)))
-
-
