@@ -1,4 +1,4 @@
-# ELEPHANT: ExtragaLactic alErt Pipeline for Hostless AstroNomical Transients
+# <img src="Elephant.png" width="24" height="24"/> ELEPHANT: ExtragaLactic alErt Pipeline for Hostless AstroNomical Transients
 This repository contains the ELEPHANT pipeline described in the paper(link).
 
 To use the pipeline, you can clone this repository with the command below
@@ -10,12 +10,19 @@ After cloning install the necessary packages with the command below
     pip install -r requirements.txt
 
 The pipeline parameters can be configured in pipeline_config.json file.
-A sample input parquet file is available in `data` folder
+A subset of sample data used in the paper is available in `data` folder. The entire dataset used in the paper 
+can be downloaded from the [Fink broker data server](https://fink-portal.org)
+
 
     {
-        "parquet_files_list": "data/*.parquet",
-        "save_directory": "/path/to/save/results/",
-        ...
+        "parquet_files_list": path to downloaded input parquet files (An example file available in data folder)
+        "save_directory": path to a folder to save results
+        "fwhm_bins":  A list of FWHM bin values (check paper)
+        "image_shape": Input stamps shape
+        "is_save_stacked_images": If true, stacked images are saved in results "save_directory" folder,
+        "sigma_clipping_kwargs": kwargs parameters for astropy sigma_clip function
+        "hostless_detection_with_clipping": sigma clipping hosteless detection threshold parameters defined in pixels
+        "number_of_processes": Number of workers used in pythong multiprocessing to process files in parallel
     }
 
 To run the pipeline use the command below

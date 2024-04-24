@@ -4,7 +4,7 @@ from scipy.stats import binned_statistic, wasserstein_distance, anderson_ksamp, 
 
 
 def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, number_of_iterations=1000, cutout_sizes=[7, 15, 29],
-                                   metric='anderson-darling'):
+                                   metric='kstest'):
     """
     Function to detect host with power spectrum analysis.
 
@@ -13,7 +13,7 @@ def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, number_of_ite
     - tpl_image: Template image (default: None)
     - number_of_iterations: Number of iterations for shuffling (default: 1000)
     - cutout_sizes: List of cutout sizes for analysis (default: [7, 15, 29])
-    - metric: Metric for comparison ('anderson-darling' or 'kstest') (default: 'anderson-darling')
+    - metric: Metric for comparison ('kstest')
 
     Returns:
     - output_table: Astropy Table containing results
@@ -111,10 +111,6 @@ def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, number_of_ite
             if (np.unique(WD_dist_real_to_shuffled).size < 3 or np.unique(WD_dist_shuffled_to_shuffled).size < 3):
                 new_row = [image_type_dict[i], size, -1, -1]
             else:
-                if metric == 'anderson-darling':
-                    res = anderson_ksamp([WD_dist_real_to_shuffled, WD_dist_shuffled_to_shuffled])
-                    new_row = [image_type_dict[i], size, res.statistic, res.significance_level]
-
                 if metric == 'kstest':
                     res = kstest(WD_dist_real_to_shuffled, WD_dist_shuffled_to_shuffled)
                     new_row = [image_type_dict[i], size, res.statistic, res.pvalue]
