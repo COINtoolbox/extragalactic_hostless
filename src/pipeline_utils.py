@@ -454,7 +454,7 @@ def run_powerspectrum_analysis(
         science_image, science_mask, image_size)
     template_data = create_noise_filled_mask(
         template_image, template_mask, image_size)
-    _, kstest_results_dict = ps.detect_host_with_powerspectrum(
+    _, kstest_results_dict, _, _ = ps.detect_host_with_powerspectrum(
         science_data, template_data, number_of_iterations=number_of_iterations,
         metric="kstest")
     return kstest_results_dict

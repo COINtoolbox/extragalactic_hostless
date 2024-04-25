@@ -122,4 +122,4 @@ def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, number_of_ite
             output_result_dict[statistic_name] = new_row[2]
             output_result_dict[pvalue_name] = new_row[3]
 
-    return output_table, output_result_dict
+    return output_table, output_result_dict, real_Abins_dict, shuffled_Abins_dict
