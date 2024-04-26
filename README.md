@@ -2,7 +2,7 @@
 [![arXiv](https://img.shields.io/badge/arXiv-astro--ph%2FXXXX.XXX-%23ED9145?labelColor=%23ED9145&color=%2321609D)](https://arxiv.org/abs/XXXX.XXXX) 
 
 
-# ![ICON](images/Elephant.png) ELEPHANT: ExtragaLactic alErt Pipeline for Hostless AstroNomical Transients  <img align="right" src="images/coin_logo.png" width="350">
+# <img align="left" src="images/Elephant.png">  <img align="right" src="images/coin_logo.png" width="350"> ELEPHANT: ExtragaLactic alErt Pipeline for Hostless AstroNomical Transients  
 
 
 This repository contains the ELEPHANT pipeline described in the paper(link).
