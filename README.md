@@ -1,4 +1,6 @@
-# ![ICON](Elephant.png) ELEPHANT: ExtragaLactic alErt Pipeline for Hostless AstroNomical Transients  <img align="right" src="images/coin_logo.png" width="350">
+# ![ICON](Elephant.png) ELEPHANT: ExtragaLactic alErt Pipeline for Hostless AstroNomical Transients  
+# <img align="right" src="images/coin_logo.png" width="350">
+
 
 This repository contains the ELEPHANT pipeline described in the paper(link).
 
