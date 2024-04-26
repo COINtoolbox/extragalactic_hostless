@@ -1,0 +1,36 @@
+# These are the SIMBAD classes used for select data. 
+# We used the crossmatch provided by Fink.
+
+AGN
+AGN_Candidate
+SN
+BH_Candidate 
+Blazar
+Blazar_Candidate
+BLLac
+BLLac_Candidate
+Candidate_Nova
+Candidate_NS
+Candidate_SN*
+LINER
+QSO
+QSO_Candidate
+Seyfert
+Seyfert1
+Seyfert2
+Seyfert_1
+Seyfert_2
+SN
+SN*_Candidate
+Supernova
+ULX
+ULX?
+ULX_Candidate
+
+# We used these classes which were assigned by Fink classifiers
+
+SN candidate
+Early SN Ia candidate
+Kilonova candidate
+
+# Beyond these we also use all objects with a TNS classification.
