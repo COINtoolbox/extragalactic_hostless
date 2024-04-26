@@ -1,5 +1,11 @@
-# ![ICON](Elephant.png) ELEPHANT: ExtragaLactic alErt Pipeline for Hostless AstroNomical Transients
-This repository contains the ELEPHANT pipeline described in the paper(link).
+[![crp7](https://img.shields.io/badge/CRP-7-%23ED9145?labelColor=%23ED9145&color=%2321609D)](https://cosmostatistics-initiative.org/residence-programs/crp7/)
+[![arXiv](https://img.shields.io/badge/arXiv-astro--ph%2FXXXX.XXX-%23ED9145?labelColor=%23ED9145&color=%2321609D)](https://arxiv.org/abs/XXXX.XXXX) 
+
+
+# <img align="left" src="images/Elephant.png">  <img align="right" src="images/coin_logo.png" width="250"> ELEPHANT: ExtragaLactic alErt Pipeline for Hostless AstroNomical Transients  
+
+
+This repository contains the ELEPHANT pipeline described in the [Pessi *et al.*, 2024]().
 
 To use the pipeline, you can clone this repository with the command below
 
@@ -44,7 +50,10 @@ The pipeline generates a result parquet file with the following columns for each
 - **kstest_TEMPLATE_N_statistic:** Kolmogorov-Smirnov test statistic value for N x N cutout template image
 - **kstest_TEMPLATE_N_pvalue:** Kolmogorov-Smirnov test p-value for N x N cutout template image
 
-The project is part of [COIN Residence Program #7, Portugal, 2023](https://cosmostatistics-initiative.org/residence-programs/crp7/)
+
+### Acknowledgements
+
+The project is a result from [COIN Residence Program #7, Portugal, 2023](https://cosmostatistics-initiative.org/residence-programs/crp7/), held in Lisbon, Portugal, from 9 to 16 September 2023 and supported by the Portuguese Fundação para a Ciência e a Tecnologia (FCT) through the Strategic Programme UIDP/FIS/00099/2020 and UIDB/FIS/00099/2020 for CENTRA. The [Cosmostatistics Initiative (COIN)](https://cosmostatistics-initiative.org/) is an international network of researchers whose goal is to foster interdisciplinarity inspired by astronomy.
 
 
 
