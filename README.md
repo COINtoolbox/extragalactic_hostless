@@ -23,7 +23,7 @@ can be downloaded from the [Fink broker data server](https://fink-portal.org)
     {
         "parquet_files_list": path to downloaded input parquet files (An example file available in data folder)
         "save_directory": path to a folder to save results
-        "fwhm_bins":  A list of FWHM bin values (check paper)
+        "fwhm_bins":  A list of FWHM bin values, default is [1.0, 2.0, 3.0]
         "image_shape": Input stamps shape
         "is_save_stacked_images": If true, stacked images are saved in results "save_directory" folder,
         "sigma_clipping_kwargs": kwargs parameters for astropy sigma_clip function
