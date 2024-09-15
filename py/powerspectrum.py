@@ -1,0 +1,116 @@
+import numpy as np
+import astropy.table as at
+from scipy.stats import binned_statistic, wasserstein_distance, anderson_ksamp, kstest
+
+def detect_host_with_powerspectrum(sci_image=None, tpl_image=None, N_iter=1000, cutout_sizes = [7, 15, 29], metric='anderson-darling'):
+    """
+    Function to detect host with power spectrum analysis.
+
+    Parameters:
+    - sci_image: Science image (default: None)
+    - tpl_image: Template image (default: None)
+    - N_iter: Number of iterations for shuffling (default: 1000)
+    - cutout_sizes: List of cutout sizes for analysis (default: [7, 15, 29])
+    - metric: Metric for comparison ('anderson-darling' or 'kstest') (default: 'anderson-darling')
+
+    Returns:
+    - output_table: Astropy Table containing results
+    """
+
+    def get_powerspectrum(data, size):
+        """
+        Function to compute power spectrum.
+
+        Parameters:
+        - data: Image data
+        - size: Size of cutout
+
+        Returns:
+        - Abins: Binned power spectrum
+        """
+        fourier_image = np.fft.fftn(data) # Compute Fourier transform
+        fourier_amplitudes = np.abs(fourier_image)**2 # Compute Fourier amplitudes
+        kfreq = np.fft.fftfreq(size) * size # Frequency bins
+        kfreq2D = np.meshgrid(kfreq, kfreq)
+        knrm = np.sqrt(kfreq2D[0]**2 + kfreq2D[1]**2) # Magnitudes of wave vectors
+        knrm = knrm.flatten()
+        fourier_amplitudes = fourier_amplitudes.flatten()
+        kbins = np.arange(0.5, size//2+1, 1.) # Bins for averaging
+        Abins, _, _ = binned_statistic(knrm, fourier_amplitudes, statistic = "mean", bins = kbins) # Binned power spectrum
+        Abins *= np.pi * (kbins[1:]**2 - kbins[:-1]**2) # Scale by area of annulus
+        return Abins
+
+    output_table = at.Table(names=['IMAGE_TYPE', 'CUTOUT_SIZE', 'STATISTIC', 'PVALUE'], dtype=['str', 'int', 'float', 'float'])
+    image_type_dict = {0: 'SCIENCE', 1: 'TEMPLATE'}
+
+    # Check if the chosen metric is valid
+    if np.isin(metric, ['anderson-darling', 'kstest'], invert=True):
+        raise Exception("Input metric has not been integrated into the pipeline yet. Please choose either 'anderson-darling' or 'kstest'.")
+
+    # Loop through science and template images
+    for i, image in enumerate([sci_image, tpl_image]):
+        if image is None:
+            continue
+
+        full_len = len(image)
+
+        real_Abins_dict = {} # Dictionary to store real Abins
+        shuffled_Abins_dict = {} # Dictionary to store shuffled Abins
+            
+        # Iterate through shuffling process
+        for n in range(N_iter):
+            copy = np.copy(image)
+            copy = copy.reshape(full_len*full_len)
+            np.random.shuffle(copy)
+            copy = copy.reshape((full_len, full_len))
+
+            for size in cutout_sizes:
+                start = int((full_len - size)/2)
+                stop = int((full_len + size)/2)
+
+                N_bins = len(np.arange(0.5, size//2+1, 1.))-1
+
+                if n == 0:
+                    shuffled_Abins_dict[size] = np.zeros((N_iter, N_bins))
+
+                    image_resized = image[start : stop, start : stop]
+                    Abins = get_powerspectrum(image_resized, size)
+                    real_Abins_dict[size] = Abins
+
+                copy_resized = copy[start : stop, start : stop]
+                Abins = get_powerspectrum(copy_resized, size)
+                shuffled_Abins_dict[size][n] = Abins
+
+        # Calculate distances and perform statistical tests
+        for size in cutout_sizes:
+
+            WD_dist_real_to_shuffled = []
+            WD_dist_shuffled_to_shuffled = []
+
+            for n in range(N_iter):
+
+                iter1 = shuffled_Abins_dict[size][n]
+                wd = wasserstein_distance(iter1, real_Abins_dict[size])
+                WD_dist_real_to_shuffled.append(wd)
+
+                for m in range(N_iter):
+                    if m >= n:
+                        continue
+
+                    iter2 = shuffled_Abins_dict[size][m]
+                    wd = wasserstein_distance(iter1, iter2)
+                    WD_dist_shuffled_to_shuffled.append(wd)
+
+            WD_dist_real_to_shuffled = np.array(WD_dist_real_to_shuffled)
+            WD_dist_shuffled_to_shuffled = np.array(WD_dist_shuffled_to_shuffled)
+
+            if metric == 'anderson-darling':
+                res = anderson_ksamp([WD_dist_real_to_shuffled, WD_dist_shuffled_to_shuffled])
+
+            if metric == 'kstest':
+                res = kstest(WD_dist_real_to_shuffled, WD_dist_shuffled_to_shuffled)
+
+            new_row = [image_type_dict[i], size, res.statistic, res.pvalue]
+            output_table.add_row(new_row)
+
+    return output_table
