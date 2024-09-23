@@ -48,7 +48,7 @@ class HostLessExtragalactic:
         object_id = data[1]["objectId"]
         # temporary hack..
         data_original = data[1].drop(["tracklet"])
-        if data_original["b:cutoutTemplate_stampData"].size == 1:
+        if np.array(data_original["b:cutoutTemplate_stampData"]).size == 1:
             return None
         data_df = maybe_filter_stamps_with_fwhm(
             data_original, self.configs["fwhm_bins"])
